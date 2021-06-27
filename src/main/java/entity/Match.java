@@ -13,9 +13,8 @@ public class Match {
         this.game = game;
     }
 
-    public Team getMatchWinnerTeam() {
-        Team winnerTeam = game.getWinnerTeam(this.firstTeam, this.secondTeam);
-        return winnerTeam;
+    public Team getMatchWinnerTeam() throws Exception {
+        return game.getWinnerTeam(this.firstTeam, this.secondTeam);
     }
 
     public void setMatchWinnerTeam(Team winnerTeam) {

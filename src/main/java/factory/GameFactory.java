@@ -2,17 +2,23 @@ package factory;
 
 import base.Game;
 import base.GameEnum;
-import service.BasketballGame;
-import service.HandballGame;
+import entity.BasketballGame;
+import entity.HandballGame;
+
+import java.util.HashMap;
 
 public class GameFactory {
+    private static HashMap<String, Game> gamesMap = new HashMap<>();
 
-    public static Game createGame(String sportName) {
-        Game game = null;
-        if (sportName.equalsIgnoreCase(GameEnum.BASKETBALL.name())) {
-            game = new BasketballGame();
-        } else if (sportName.equalsIgnoreCase(GameEnum.HANDBALL.name())) {
-            game = new HandballGame();
+    static {
+        gamesMap.put("BASKETBALL", new BasketballGame());
+        gamesMap.put("HANDBALL", new HandballGame());
+    }
+
+    public static Game createGame(String sportName) throws Exception {
+        Game game = gamesMap.get(sportName.toUpperCase());
+        if (game == null) {
+            throw new Exception(sportName + " is not a valid sport");
         }
 
         return game;

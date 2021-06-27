@@ -1,90 +1,40 @@
 package service;
 
 import base.Player;
-import base.Game;
 import entity.Match;
 import entity.Team;
-import factory.GameFactory;
-import factory.PlayerFactory;
-import factory.TeamFactory;
-import validator.MatchValidator;
-import validator.PlayerValidator;
+import factory.MatchFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class Tournament {
 
-    public List<String[]> extractMatchesRecords(List<String> inputSourceList) {
-        List<String[]> matchesRecordsList = new ArrayList<>();
-        for (String inputSourceRecord : inputSourceList) {
-            matchesRecordsList.add(inputSourceRecord.split("\\n"));
-        }
+    private List<Match> matchesList;
 
-        return matchesRecordsList;
+    public Tournament(List<String> inputSourceList) throws Exception {
+        List<String[]> matchesRecordsList = extractMatchesRecords(inputSourceList);
+        matchesList = MatchFactory.createMatchesList(matchesRecordsList);
     }
 
-    public void validateMatches(List<String[]> inputSourceList) throws Exception {
-        boolean validMatchRecord;
-        for (String[] matchRecord : inputSourceList) {
-            validMatchRecord = MatchValidator.validateMatchRecord(matchRecord);
-            if (!validMatchRecord) {
-                throw new Exception("Invalid Match Record Format!");
-            }
-        }
+    public List<Player> rateMatchPlayers(Match match) throws Exception {
+        Team winnerTeam = match.getMatchWinnerTeam();
+        RewardSystem.addBonusPointsToWinnerTeam(winnerTeam, 10);
+        match.setMatchWinnerTeam(winnerTeam);
+
+        return new ArrayList<>(RatingSystem.rateMatchPlayers(match));
     }
 
-    public void validatePlayers(List<String[]> inputSourceList) throws Exception {
-        boolean validPlayerRecord;
-        for (String[] matchRecord : inputSourceList) {
-            validPlayerRecord = PlayerValidator.validateMultiplePlayers(matchRecord);
-            if (!validPlayerRecord) {
-                throw new Exception("Invalid Player Record Format!");
-            }
-        }
-    }
-
-    public List<Player> ratePlayersForMatch(List<Match> matchesList) {
-        List<Player> playersRateForEachMatch = new ArrayList<>();
-        Team winnerTeam;
+    public List<Player> getPlayersOverallRate(List<Match> matchesList) throws Exception {
+        List<Player> playersList = new ArrayList<>();
         for (Match match : matchesList) {
-            winnerTeam = match.getMatchWinnerTeam();
-            winnerTeam = RewardSystem.addBonusPointsToWinnerTeam(winnerTeam, 10);
-            match.setMatchWinnerTeam(winnerTeam);
-            playersRateForEachMatch.addAll(RatingSystem.rateMatchPlayers(match));
+            playersList.addAll(rateMatchPlayers(match));
         }
-
-        return playersRateForEachMatch;
+        return RatingSystem.getPlayersOverallRate(playersList);
     }
 
-    public List<Player> getPlayersOverallRate(List<Player> playersWithOverallRating) {
-        return RatingSystem.getPlayersOverallRate(playersWithOverallRating);
-    }
-
-    public List<Match> buildTournamentMatches(List<String[]> inputSourceList) {
-        List<Match> matchesList = new ArrayList<>();
-        List<Player> matchPlayers = null;
-        Game game = null;
-        String sportName = "";
-        for (String[] matchInfo : inputSourceList) {
-            sportName = matchInfo[0];
-
-            //Create Match Players
-            matchPlayers = createPlayersForMatch(matchInfo);
-
-            //Create Game
-            game = createMatchGameType(sportName);
-
-            //Create Match Teams
-            List<Team> matchTeams = createMatchTeams(matchPlayers);
-
-            //Create Match
-            matchesList.add(createMatch(matchTeams.get(0), matchTeams.get(1), game));
-        }
-        return matchesList;
-    }
-
-    public void printMostValuablePlayerInfo(List<Player> playersWithOverallRating) {
+    public void printMostValuablePlayerInfo() throws Exception {
+        List<Player> playersWithOverallRating = getPlayersOverallRate(matchesList);
         Player mvp = RatingSystem.getPlayerWithHighestOverallRating(playersWithOverallRating);
         System.out.println(mvp.getPlayerName() + " Is The Most Valuable Player In The Tournament. \n");
         System.out.println("Player Information:- ");
@@ -94,19 +44,16 @@ public class Tournament {
         System.out.println("Overall Rating: " + mvp.getPlayerRating());
     }
 
-    private List<Player> createPlayersForMatch(String[] matchInfo) {
-        return PlayerFactory.createMatchPlayers(matchInfo);
+    private List<String[]> extractMatchesRecords(List<String> inputSourceList) {
+        List<String[]> matchesRecordsList = new ArrayList<>();
+        for (String inputSourceRecord : inputSourceList) {
+            matchesRecordsList.add(inputSourceRecord.split("\\n"));
+        }
+
+        return matchesRecordsList;
     }
 
-    private Game createMatchGameType(String sportName) {
-        return GameFactory.createGame(sportName);
-    }
-
-    private List<Team> createMatchTeams(List<Player> matchPlayers) {
-        return TeamFactory.createMatchTeams(matchPlayers);
-    }
-
-    private Match createMatch(Team firstTeam, Team secondTeam, Game game) {
-        return new Match(firstTeam, secondTeam, game);
+    public List<Match> getMatchesList() {
+        return matchesList;
     }
 }

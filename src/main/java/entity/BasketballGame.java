@@ -1,4 +1,4 @@
-package service;
+package entity;
 
 import base.Player;
 import base.Game;
@@ -14,25 +14,26 @@ public class BasketballGame implements Game {
     public static final int REBOUND_INDEX = 1;
     public static final int ASSIST_INDEX = 2;
 
-    {
-        gamePointsSystem = new HashMap<String, int[]>();
+    private static Map<String, int[]> gamePointsSystem = new HashMap<>();
+
+    static {
         gamePointsSystem.put("G", new int[]{2, 3, 1});
         gamePointsSystem.put("F", new int[]{2, 2, 2});
         gamePointsSystem.put("C", new int[]{2, 1, 3});
     }
 
-    private static Map<String, int[]> gamePointsSystem;
 
     @Override
-    public Team getWinnerTeam(Team firstTeam, Team secondTeam) {
+    public Team getWinnerTeam(Team firstTeam, Team secondTeam) throws Exception {
         int firstTeamPoints = calculateTeamTotalPoints(firstTeam);
         int secondTeamPoints = calculateTeamTotalPoints(secondTeam);
         if (firstTeamPoints > secondTeamPoints) {
             return firstTeam;
         } else if (secondTeamPoints > firstTeamPoints) {
             return secondTeam;
+        } else {
+            throw new Exception("Invalid Match Input. The Match dose not have a winner team.");
         }
-        return null;
     }
 
     @Override
@@ -41,7 +42,7 @@ public class BasketballGame implements Game {
         int[] pointsSystem = gamePointsSystem.get(player.getPosition());
         Double currentRating = basketballPlayer.getPlayerRating();
         if (currentRating == null) {
-            currentRating = new Double(0.0);
+            currentRating = 0.0;
         }
         currentRating += basketballPlayer.getScoredPoints() * pointsSystem[SCORED_POINTS_INDEX]
                 + basketballPlayer.getRebounds() * pointsSystem[REBOUND_INDEX]
